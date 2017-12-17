@@ -25,7 +25,9 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
-
+MAX_DECEL = 3. # Highest acceptable deceleration rate, in m/s^2
+TARGET_DECEL = 1. # Ideal deceleration rate, in m/s^2
+MAX_COMPLETE_STOP_DIST = 3. # If the traffic light is within this many meters, car can come to a complete stop
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -42,6 +44,9 @@ class WaypointUpdater(object):
         # TODO: Add other member variables you need below
         self.base_waypoints = None
         self.pose = None
+        self.tl_index = 417 # TODO: Initialize to some big number, or none, once traffic_cb implemented
+        self.std_velocity = self.kmph2mps(rospy.get_param('~velocity')) # Max speed parameter, in m/s
+        self.change_tl_index = True # TODO: Initialize to false, and set to true in traffic_cb if tl_index gets changed
 
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
@@ -50,17 +55,41 @@ class WaypointUpdater(object):
                 car_x = self.pose.position.x
                 car_y = self.pose.position.y
 
-                # Loop through the waypoints to find the closest that is ahead of the car
+                # Loop through the waypoints to find the closest
                 closest_point = None
                 closest_distance = float('inf')
                 for i in range(0, len(self.base_waypoints)):
                     waypoint = self.base_waypoints[i]
-                    distance = math.sqrt((car_x - waypoint.pose.pose.position.x) ** 2 + (car_y - waypoint.pose.pose.position.y) ** 2)
-                    if distance < closest_distance:
-                        closest_distance = distance
+                    dist = math.sqrt((car_x - waypoint.pose.pose.position.x) ** 2 + (car_y - waypoint.pose.pose.position.y) ** 2)
+                    if dist < closest_distance:
+                        closest_distance = dist
                         closest_point = i
 
+                # Update waypoint velocities if they need to change
+                if self.change_tl_index:
+                    self.change_tl_index = False
+                    rospy.loginfo("waypoint_updater tl_index_update change noticed")
+
+                    if self.tl_index > closest_point: # Do nothing if the tl_index behind the car
+                        dist = self.distance(self.base_waypoints, closest_point, self.tl_index) # Distance from the car (assuming it's at the nearest waypoint) to the location of the red light
+                        car_vel = self.get_waypoint_velocity(self.base_waypoints[closest_point]) # Assume the car is currently going at the speed of the current waypoint - should be conservative
+                        decel_rate = car_vel**2/(2*dist) # Per equation vf^2 = vi^2 + 2ad; vf = 0
+
+                        if decel_rate < MAX_DECEL: # Drive right through the light if it's too close
+                            decel_rate = max(TARGET_DECEL, decel_rate) # Don't decelerate too slowly
+                            rospy.loginfo("waypoint_updater tl_index_update stopping for tl; decel_rate %s", decel_rate)
+
+                            for i in range(closest_point, self.tl_index):
+                                # TODO Need logic for all traffic lights disappearing
+                                dist = self.distance(self.base_waypoints, i, self.tl_index)
+                                vel_target = math.sqrt(2*decel_rate*dist)
+                                vel_target = min(vel_target, self.std_velocity)
+                                if dist < MAX_COMPLETE_STOP_DIST:
+                                    vel_target = 0
+                                self.set_waypoint_velocity(self.base_waypoints, i, vel_target)
+
                 # final_waypoints is the next LOOKAHEAD_WPS waypoints starting with the closest
+                # (this assumes that the car should always travel through the waypoints in ascending order)
                 final_waypoints = self.base_waypoints[closest_point:closest_point + LOOKAHEAD_WPS]  # final_waypoints will get shorter as the last waypoint is approached
 
                 # Publish
@@ -106,6 +135,9 @@ class WaypointUpdater(object):
             dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
             wp1 = i
         return dist
+
+    def kmph2mps(self, velocity_kmph):
+        return (velocity_kmph * 1000.) / (60. * 60.)
 
 
 if __name__ == '__main__':
