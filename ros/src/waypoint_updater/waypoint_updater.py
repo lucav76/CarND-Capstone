@@ -45,7 +45,7 @@ class WaypointUpdater(object):
         self.base_waypoints = None
         self.pose = None
         self.tl_index = 417 # TODO: Initialize to some big number, or none, once traffic_cb implemented
-        self.std_velocity = self.kmph2mps(rospy.get_param('~velocity')) # Max speed parameter, in m/s
+        self.std_velocity = self.kmph2mps(rospy.get_param('/waypoint_loader/velocity')) # Max speed parameter, in m/s
         self.change_tl_index = True # TODO: Initialize to false, and set to true in traffic_cb if tl_index gets changed
 
         rate = rospy.Rate(10)
