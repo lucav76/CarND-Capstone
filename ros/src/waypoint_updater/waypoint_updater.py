@@ -6,6 +6,9 @@ from styx_msgs.msg import Lane, Waypoint
 
 import math
 
+import tf
+import numpy as np
+
 '''
 This node will publish waypoints from the car's current position to some `x` distance ahead.
 
@@ -37,15 +40,49 @@ class WaypointUpdater(object):
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # TODO: Add other member variables you need below
+        self.base_waypoints = None
+        self.pose = None
 
-        rospy.spin()
+        rate = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            if self.base_waypoints and self.pose:
+                # Get the position and yaw of the car in euler coordinates
+                car_x = self.pose.position.x
+                car_y = self.pose.position.y
+
+                # Loop through the waypoints to find the closest that is ahead of the car
+                closest_point = None
+                closest_distance = float('inf')
+                for i in range(0, len(self.base_waypoints)):
+                    waypoint = self.base_waypoints[i]
+                    distance = math.sqrt((car_x - waypoint.pose.pose.position.x) ** 2 + (car_y - waypoint.pose.pose.position.y) ** 2)
+                    if distance < closest_distance:
+                        closest_distance = distance
+                        closest_point = i
+
+                # final_waypoints is the next LOOKAHEAD_WPS waypoints starting with the closest
+                final_waypoints = self.base_waypoints[closest_point:closest_point + LOOKAHEAD_WPS]  # final_waypoints will get shorter as the last waypoint is approached
+
+                # Publish
+                lane = Lane()
+                lane.header.frame_id = '/world'
+                lane.header.stamp = rospy.Time.now()
+                lane.waypoints = final_waypoints
+                self.final_waypoints_pub.publish(lane)
+                rospy.loginfo("waypoint_updater published final_waypoints; closest_point %s, closest_distance %s, len(final_waypoints) %s, time %s", closest_point, closest_distance, len(final_waypoints), lane.header.stamp)
+
+            rate.sleep()
 
     def pose_cb(self, msg):
-        # TODO: Implement
+        """Saves the position topic message without the top header."""
+        self.pose = msg.pose
+        # rospy.loginfo("waypoint_updater received a position")
         pass
 
     def waypoints_cb(self, waypoints):
-        # TODO: Implement
+        """Saves the waypoints topic message without the top header."""
+        self.base_waypoints = waypoints.waypoints
+        # rospy.loginfo("waypoint_updater base waypoints obtained")
         pass
 
     def traffic_cb(self, msg):
