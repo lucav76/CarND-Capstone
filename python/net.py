@@ -39,9 +39,9 @@ class Labels:
 def LightNetModel(shape, n_classes, normalize, big, keep_rate, drop, cropping = None):
     if (big):
         out_cv1 = 20
-        out_cv2 = 40
-        out_cv3 = 64
-        out_cv4 = 40
+        out_cv2 = 32
+        out_cv3 = 32
+        out_cv4 = 32
         out_fc1 = 620
         out_fc2 = 256
         out_fc3 = 128
