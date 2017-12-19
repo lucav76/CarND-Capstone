@@ -85,10 +85,10 @@ class LightDetection:
         #image_np = np.expand_dims(np.asarray(image, dtype=np.uint8), 0)
 
         width, height = image_wrap.get_size()
-        print("Shape: " + str(image_wrap.get_size()))
+        #print("Shape: " + str(image_wrap.get_size()))
 
         image_np = image_wrap.image_np(False)
-        print("Shape NP: " + str(image_np.shape))
+        #print("Shape NP: " + str(image_np.shape))
 
         #with tf.Session(graph=self.detection_graph) as sess:
         # Actual detection.

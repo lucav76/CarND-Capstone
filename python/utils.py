@@ -4,6 +4,10 @@ from os.path import isfile, join
 
 def files_only(dir):
     #list = [join(dir, f) for f in os.listdir(dir) if isfile(join(dir, f))]
+
+    if not os.path.isdir(dir):
+        return []
+
     list = []
 
     for f in os.listdir(dir):

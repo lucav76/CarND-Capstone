@@ -38,12 +38,13 @@ class Labels:
 
 def LightNetModel(shape, n_classes, normalize, big, keep_rate, drop, cropping = None):
     if (big):
-        out_cv1 = 16
-        out_cv2 = 32
-        out_cv3 = 32
-        out_cv4 = 32
+        out_cv1 = 20
+        out_cv2 = 40
+        out_cv3 = 64
+        out_cv4 = 40
         out_fc1 = 620
-        out_fc2 = 184
+        out_fc2 = 256
+        out_fc3 = 128
     else:
         out_cv1 = 6
         out_cv2 = 6  # 20
@@ -79,12 +80,12 @@ def LightNetModel(shape, n_classes, normalize, big, keep_rate, drop, cropping = 
     model.add(Flatten())
     model.add(Dense(out_fc1, name="fc1", activation='relu'))
     if drop:
-        model.add(Dropout(keep_rate, name="drop4"))
+        model.add(Dropout(keep_rate, name="drop3"))
     model.add(Dense(out_fc2, name="fc2", activation='relu'))
     if big:
-        model.add(Dense(32, name="fc3", activation='relu'))
+        model.add(Dense(out_fc3, name="fc3", activation='relu'))
 
-    model.add(Dense(n_classes, name="fc4", activation='softmax'))
+    model.add(Dense(n_classes, name="fcout", activation='softmax'))
 
     return model
 
@@ -105,20 +106,25 @@ def show_history(history_object):
     plt.show()
 
 class LightNet:
-    def __init__(self, base_dir, fast_training):
-        self.base_dir = base_dir
+    def __init__(self, base_dirs, fast_training):
+        self.base_dirs = base_dirs
         self.fast_training = fast_training
-        self.num_classes = 7
+        self.num_classes = 9
         self.augment_validation = False
         self.validation_percentage = 0.15
         self.num_epochs = 100
         self.batch_size = 16
         self.optimizer = Adam(lr=0.001)  # 0.9130 - 0.9199 with Big
-        self.data_labes = ["Off", "Green", "GreenLeft", "Red", "RedLeft", "Yellow", "YellowLeft", ]
+        self.data_labes = ["Off", "Green", "GreenLeft", "Red", "RedLeft", "Yellow", "YellowLeft", "Partial", "Noise"]
 
     def get_class(self, dir, num_crop, label):
         label_hot = one_hot_int([label], self.num_classes)
-        return aug.DataClass(files_only(self.base_dir + dir), num_crop, not self.fast_training, label_str=dir, label=label,
+        files = []
+
+        for single_dir in self.base_dirs:
+            files.extend(files_only(single_dir + dir))
+
+        return aug.DataClass(files, num_crop, not self.fast_training, label_str=dir, label=label,
                              label_hot=label_hot[0], resize_to=(64, 64), cache=True)
 
     def create_dataset(self):
@@ -131,6 +137,8 @@ class LightNet:
         data_classes.append(self.get_class(self.data_labes[4], 0 if self.fast_training else 1, 4))
         data_classes.append(self.get_class(self.data_labes[5], 0 if self.fast_training else 5, 5))
         data_classes.append(self.get_class(self.data_labes[6], 0 if self.fast_training else 5, 6))
+        data_classes.append(self.get_class(self.data_labes[7], 0 if self.fast_training else 5, 7))
+        data_classes.append(self.get_class(self.data_labes[8], 0 if self.fast_training else 5, 8))
 
         self.dataset=aug.DataSet(data_classes, self.validation_percentage, augment_validation=self.augment_validation)
 
@@ -158,7 +166,7 @@ class LightNet:
         return model
 
     def train(self, show_history):
-        EARLY_STOPPING = EarlyStopping(monitor='val_loss', min_delta=0.0005, patience=3 if self.fast_training else 5, verbose=1,
+        EARLY_STOPPING = EarlyStopping(monitor='val_loss', min_delta=0.0005, patience=3 if self.fast_training else 7, verbose=1,
                                        mode='auto')
         callbacks = [EARLY_STOPPING]
         checkpoint = ModelCheckpoint("model-ck.h5", monitor='val_loss', mode='min', verbose=1, save_best_only=True)

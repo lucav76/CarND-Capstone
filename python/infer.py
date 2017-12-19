@@ -7,11 +7,14 @@ from detection import freeze_session
 import net
 import cv2
 import aug
+import utils
 from PIL import Image
 from keras.models import load_model
 from keras import backend as K1
 from keras.layers.core import K as K2
 import time
+import os
+import os.path
 
 print("Python: " + sys.version)
 print("TensorFlow:" + tf.__version__)
@@ -73,7 +76,7 @@ class LightDetectionAndClassification:
         t1 = self.current_milli_time()
 
         if len(boxes) == 0:
-            return None, None
+            return None, None, None, None, None, None
 
         biggest = self.find_biggest(boxes)
         y1,x1,y2,x2 = biggest
@@ -116,6 +119,34 @@ class LightDetectionAndClassification:
 
         image_wrap.save("out_infer\\" + image_file)
         cv2.imwrite("out_infer\\roi_" + image_file, img_box)
+
+    def infer_and_save_dir(self, path):
+        files = utils.files_only(path)
+
+        for file in files:
+            if not file.endswith(".jpg"):
+                continue
+            image_wrap = ImageWrap(cv2.imread(file), True)
+
+            print("File: " + str(file))
+            biggest_box, predictions, prediction_class, prediction_label, annotated, img_box = self.infer(image_wrap, True)
+
+            if prediction_label is None:
+                continue
+
+            #print("Predictions:" + str(predictions))
+            #print("Biggest box: " + str(biggest_box) + " - " + str(prediction_class) + " - " + str(prediction_label))
+
+            file_name = file.replace(path, "")
+            file_name = file_name.replace("\\", "")
+
+            print(file_name)
+            dir = path + "\\" + prediction_label
+            if not os.path.isdir(dir):
+                os.mkdir(dir)
+            #image_wrap.save(dir + "\\" + file_name)
+            cv2.imwrite(dir + "\\" + file_name, img_box)
+            #cv2.imwrite("out_infer\\roi_" + image_file, img_box)
 
 
 

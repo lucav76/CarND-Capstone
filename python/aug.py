@@ -91,7 +91,8 @@ class AugCrop:
         horiz_w = int(columns * (0.6 + 0.4*random.random()))
         horiz_x = int((columns-horiz_w) * random.random())
 
-        vert_h = int(rows * (0.6 + 0.4 * random.random()))
+        # Removing more than 20% of the vertical semaphore is risky, as it could just remove the light on...
+        vert_h = int(rows * (0.8 + 0.2 * random.random()))
         vert_y = int((rows - vert_h) * random.random())
 
         img = img[vert_y:vert_y+vert_h, horiz_x:horiz_x+horiz_w]
