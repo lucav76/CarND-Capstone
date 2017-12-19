@@ -1,6 +1,17 @@
 import aug
 import cv2
 import net
+import utils
+
+a = [0,1,2,3,4,5,6,7,8,9,"a","b","C","D"]
+print(a)
+b = utils.shuffle(a)
+print(b)
+
+c, d = utils.train_test_split(b, 0.2)
+
+print(c)
+print(d)
 
 
 data1 = aug.DataClass(["test.jpg"], 3, True, label_str="Test1", label=2, label_hot = [0,0,1,0])

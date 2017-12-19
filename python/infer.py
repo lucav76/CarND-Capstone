@@ -6,7 +6,6 @@ from detection import ImageWrap
 from detection import freeze_session
 import net
 import cv2
-import aug
 import utils
 from PIL import Image
 from keras.models import load_model
@@ -91,7 +90,7 @@ class LightDetectionAndClassification:
             traffic_light = img[box[1]:box[3], box[0]:box[2]]
             traffic_light = cv2.cvtColor(traffic_light, cv2.COLOR_BGR2GRAY);
             traffic_light_64_64 = cv2.resize(traffic_light, (64, 64), interpolation=cv2.INTER_CUBIC)
-            traffic_light_64_64 = aug.resize_to_1_if_required(traffic_light_64_64)
+            traffic_light_64_64 = utils.resize_to_1_if_required(traffic_light_64_64)
 
             predictions = self.classifier_model.predict(np.array([traffic_light_64_64]))[0]
             predicted_class = np.argmax(predictions)

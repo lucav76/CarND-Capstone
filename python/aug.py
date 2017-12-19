@@ -1,26 +1,11 @@
 import cv2
 import random
 import numpy as np
-import sklearn
-from sklearn.model_selection import train_test_split
-from sklearn.utils import shuffle
-from skimage.exposure import equalize_hist
-from skimage.exposure import equalize_adapthist
-from skimage.exposure import rescale_intensity
-from skimage.restoration import denoise_tv_bregman
-from skimage.restoration import denoise_tv_chambolle
-
-def resize_to_1_if_required(img):
-    shape = np.shape(img)
-
-    if (len(shape)==3):
-        return img
-
-    return np.reshape(img, (shape[0], shape[1], 1))
+import utils
 
 def bgr_to_gray(img):
     img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    return resize_to_1_if_required(img)
+    return utils.resize_to_1_if_required(img)
 
 def load_image_gray(path):
     img = cv2.imread(path)
@@ -54,7 +39,7 @@ class AugFromFile:
             img = cv2.resize(img, self.resize_to, interpolation=cv2.INTER_CUBIC)
 
         # img = equalize_hist(img.squeeze())
-        return resize_to_1_if_required(img)
+        return utils.resize_to_1_if_required(img)
 
     def to_string(self):
         return self.file + " Label: " + str(self.label_str) + " - " + str(self.label) + " - Hot: " + str(self.label_hot)
@@ -69,7 +54,7 @@ class AugMirrorH:
 
     def get(self):
         img = cv2.flip(self.parent_aug.get(), 1)
-        img = resize_to_1_if_required(img)
+        img = utils.resize_to_1_if_required(img)
 
         return img
 
@@ -98,7 +83,7 @@ class AugCrop:
         img = img[vert_y:vert_y+vert_h, horiz_x:horiz_x+horiz_w]
         img = cv2.resize(img, (rows, columns), interpolation=cv2.INTER_CUBIC)
 
-        img = resize_to_1_if_required(img)
+        img = utils.resize_to_1_if_required(img)
 
         return img
 
@@ -150,7 +135,7 @@ class DataClass:
         return list
 
     def get_elems_augmented_split(self, validation_percentage, augment_validation=False):
-        files_training, files_validation = train_test_split(self.files, test_size=validation_percentage, train_size=1 - validation_percentage)
+        files_training, files_validation = utils.train_test_split(self.files, test_size=validation_percentage)
         list_training = []
         list_validation = []
 
@@ -171,8 +156,6 @@ class DataSet:
         self.validation = []
 
         for single_class in data_classes:
-            # items_single_class = single_class.get_elems_augmented()
-            # train_single_class, test_single_class = train_test_split(items_single_class, test_size=validation_percentage, train_size=1-validation_percentage)
             train_single_class, test_single_class = single_class.get_elems_augmented_split(validation_percentage, augment_validation=augment_validation)
 
             self.train.extend(train_single_class)
@@ -186,13 +169,13 @@ class DataSet:
 
     def get_validation_set(self, randomize=True):
         if randomize:
-            return shuffle(self.validation)
+            return utils.shuffle(self.validation)
 
         return self.validation
 
     def get_training_set(self, randomize=True):
         if randomize:
-            return shuffle(self.train)
+            return utils.shuffle(self.train)
         return self.train
 
     def get_training_generator(self, batch_size=32):
@@ -204,7 +187,7 @@ class DataSet:
     def generator(self, augmented_samples, batch_size=32):
         num_samples = len(augmented_samples)
         while 1: # Loop forever so the generator never terminates
-            augmented_samples = sklearn.utils.shuffle(augmented_samples)
+            augmented_samples = utils.shuffle(augmented_samples)
             batch_partial_size = batch_size
 
             for offset in range(0, num_samples, batch_partial_size):
@@ -222,4 +205,4 @@ class DataSet:
                 X_train_ar = np.array(images)
                 y_train_ar = np.array(outputs)
 
-                yield sklearn.utils.shuffle(X_train_ar, y_train_ar)
+                yield utils.shuffle2(X_train_ar, y_train_ar)
