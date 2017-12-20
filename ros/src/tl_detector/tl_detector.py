@@ -51,19 +51,27 @@ class TLDetector(object):
         self.state_count = 0
         self.publish_ground_truth = True
 
-        rospy.spin()
+        self.loop()
+        # rospy.spin()
 
+    def loop(self):
+        rate = rospy.Rate(10) # 10Hz
+        while not rospy.is_shutdown():
+            if self.lights is not None and self.publish_ground_truth:
+                wp, state = self.process_traffic_lights()
+                if state == 0:
+                    self.upcoming_red_light_pub.publish(Int32(wp))
+            rate.sleep()
+            
     def pose_cb(self, msg):
         self.pose = msg
 
     def waypoints_cb(self, waypoints):
         self.waypoints = waypoints.waypoints
+        rospy.loginfo("TL_DETECTOR: Got waypoints")
 
     def traffic_cb(self, msg):
         self.lights = msg.lights
-        if self.publish_ground_truth:
-            wp, state = self.process_traffic_lights()
-            self.upcoming_red_light_pub.publish(Int32(wp))
 
     def image_cb(self, msg):
         """Identifies red lights in the incoming camera image and publishes the index
@@ -153,15 +161,14 @@ class TLDetector(object):
 
         # List of positions that correspond to the line to stop in front of for a given intersection
         stop_line_positions = self.config['stop_line_positions']
-        if(self.pose):
+        if self.pose:
             car_wp_id = self.get_closest_waypoint(self.pose.pose, self.waypoints)
             if self.publish_ground_truth:
                 # use traffic light waypoints instead of all
                 traffic_light_wp_id = self.get_closest_waypoint(self.pose.pose, self.lights)
-                if traffic_light_wp_id == -1:
-                    rospy.logwarn("TL_DETECTOR: Invalid stop line index")
+                if traffic_light_wp_id < 0 or traffic_light_wp_id >= len(self.lights):
+                    rospy.logwarn("TL_DETECTOR: Invalid traffic light idx %i", traffic_light_wp_id)
                     return -1, TrafficLight.UNKNOWN
-                rospy.loginfo("TL_DETECTOR: Closest Traffic Light id: %i", traffic_light_wp_id)
                 traffic_light = self.lights[traffic_light_wp_id]
                 # get closest stopline waypoint index
                 stop_line_pose = Pose()
@@ -170,15 +177,23 @@ class TLDetector(object):
                 stop_line_pose.position.y = stop_line_positions[traffic_light_wp_id][1]
                 # back to all waypoints
                 stop_line_wp_id = self.get_closest_waypoint(stop_line_pose, self.waypoints)
-                if stop_line_wp_id == -1:
-                    rospy.logwarn("TL_DETECTOR: Invalid stop line index")
+                if stop_line_wp_id < 0:
+                    rospy.logwarn("TL_DETECTOR: Invalid stop line idx %i", stop_line_wp_id)
                     return -1, TrafficLight.UNKNOWN
-                rospy.loginfo("TL_DETECTOR: Closest Stop Line id: %i", stop_line_wp_id)
-                rospy.loginfo("TL_DETECTOR: Car x: %f, Car y: %f", self.pose.pose.position.x, self.pose.pose.position.y)
-                rospy.loginfo("TL_DETECTOR: Stop x: %f, Stop y: %f", stop_line_pose.position.x, stop_line_pose.position.y)
-                rospy.loginfo("TL_DETECTOR: Traffic Light State: %i", traffic_light.state)
-                if traffic_light.state ==  0:
-                    return stop_line_wp_id, traffic_light.state
+
+                rospy.loginfo("TL_DETECTOR: Car   x: %.2f, y: %.2f",
+                              self.pose.pose.position.x,
+                              self.pose.pose.position.y)
+                rospy.loginfo("TL_DETECTOR: Stop  x: %.2f, y: %.2f, id: %i",
+                              stop_line_pose.position.x,
+                              stop_line_pose.position.y,
+                              stop_line_wp_id)
+                rospy.loginfo("TL_DETECTOR: Light x: %.2f, y: %.2f, id: %i, state: %i",
+                              traffic_light.pose.pose.position.x,
+                              traffic_light.pose.pose.position.y,
+                              traffic_light_wp_id, traffic_light.state)
+
+                return stop_line_wp_id, traffic_light.state
 
 
         #TODO find the closest visible traffic light (if one exists)
