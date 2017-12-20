@@ -20,6 +20,26 @@ This is the project repo for the final project of the Udacity Self-Driving Car N
 ### Docker Installation
 [Install Docker](https://docs.docker.com/engine/installation/)
 
+#### With docker-compose
+
+##### Run
+```bash
+docker-compose up
+```
+
+##### Clean up
+```bash
+docker-compose down -v
+```
+
+##### Full Clean up
+Delete the image file
+Will rebuild when `docker-compose up` again
+```bash
+docker-compose down -v --rmi all
+```
+
+#### Without docker-compose
 Build the docker container
 ```bash
 docker build . -t capstone

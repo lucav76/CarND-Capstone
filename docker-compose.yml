@@ -1,0 +1,13 @@
+version: "3"
+services:
+  ros:
+    build: .
+    volumes:
+      - ".:/capstone"
+      - "/tmp/log:/root/.ros/"
+
+    ports:
+      - "4567:4567"
+      - "11311:11311"
+
+    command: bash -c "catkin_make && source devel/setup.sh && roslaunch launch/styx.launch"
