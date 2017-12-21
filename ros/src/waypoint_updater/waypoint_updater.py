@@ -69,9 +69,10 @@ class WaypointUpdater(object):
                 if closest_point == 315: # Long stop
                     self.change_tl_index = True
                     self.tl_index = 417
-                elif self.get_waypoint_velocity(self.mod_waypoints[closest_point]) == 0: # Start again once stopped
-                    self.change_tl_index = True
-                    self.tl_index = -1
+                elif self.mod_waypoints:
+                    if self.get_waypoint_velocity(self.mod_waypoints[closest_point]) == 0: # Start again once stopped
+                        self.change_tl_index = True
+                        self.tl_index = -1
                 # TODO End TODO
 
                 # Update waypoint velocities if tl_index has changed
