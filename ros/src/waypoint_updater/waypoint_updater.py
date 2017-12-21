@@ -69,7 +69,7 @@ class WaypointUpdater(object):
                 if closest_point == 315: # Long stop
                     self.change_tl_index = True
                     self.tl_index = 417
-                elif closest_point == 414: # Start again once car is stopped/almost stopped
+                elif closest_point == 415: # Start again once car is stopped/almost stopped
                     self.change_tl_index = True
                     self.tl_index = -1
                 # TODO End TODO
@@ -104,6 +104,8 @@ class WaypointUpdater(object):
 
                         else:
                             rospy.loginfo("tl_index_update cannot stop; decel required would be %s", decel_rate)
+                    else:
+                        rospy.loginfo("tl_index_update new tl_index of %s behind car", self.tl_index)
 
                 # final_waypoints is the next LOOKAHEAD_WPS waypoints starting with the closest
                 # (this assumes that the car should always travel through the waypoints in ascending order)
