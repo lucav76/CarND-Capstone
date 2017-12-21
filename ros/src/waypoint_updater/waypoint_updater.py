@@ -67,15 +67,6 @@ class WaypointUpdater(object):
                         closest_distance = dist
                         closest_point = i
 
-                # TODO: For testing only: delete before deployment
-                if closest_point == 315: # Long stop
-                    self.change_tl_index = True
-                    self.tl_index = 417
-                elif closest_point == 415: # Start again once car is stopped/almost stopped
-                    self.change_tl_index = True
-                    self.tl_index = -1
-                # TODO End TODO
-
                 # Update waypoint velocities if tl_index has changed
                 if self.change_tl_index:
                     # Whenever tl_index changes, calculate all waypoint speeds
