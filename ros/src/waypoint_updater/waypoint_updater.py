@@ -66,9 +66,9 @@ class WaypointUpdater(object):
                         closest_point = i
 
                 # TODO: For testing only: delete before deployment
-                if closest_point == 405:
+                if closest_point > 200:
                     self.change_tl_index = True
-                    self.tl_index = 417
+                    self.tl_index = 412
                 # TODO End TODO
 
                 # Update waypoint velocities if tl_index has changed
