@@ -69,10 +69,9 @@ class WaypointUpdater(object):
                 if closest_point == 315: # Long stop
                     self.change_tl_index = True
                     self.tl_index = 417
-                elif self.mod_waypoints:
-                    if self.get_waypoint_velocity(self.mod_waypoints[closest_point]) < 1.0: # Start again once almost stopped
-                        self.change_tl_index = True
-                        self.tl_index = -1
+                elif closest_point == 414: # Start again once car is stopped/almost stopped
+                    self.change_tl_index = True
+                    self.tl_index = -1
                 # TODO End TODO
 
                 # Update waypoint velocities if tl_index has changed
@@ -116,7 +115,7 @@ class WaypointUpdater(object):
                 lane.header.stamp = rospy.Time.now()
                 lane.waypoints = final_waypoints
                 self.final_waypoints_pub.publish(lane)
-                rospy.loginfo("waypoint_updater published final_waypoints; closest_point %s, closest_distance %s, car_vel %s, len(final_waypoints) %s, tl_index %s, time %s", closest_point, closest_distance, len(final_waypoints), self.get_waypoint_velocity(self.base_waypoints[closest_point]), self.tl_index, lane.header.stamp)
+                rospy.loginfo("waypoint_updater published final_waypoints; closest_point %s, closest_distance %s, car_vel %s, len(final_waypoints) %s, tl_index %s, time %s", closest_point, closest_distance, self.get_waypoint_velocity(self.base_waypoints[closest_point]), len(final_waypoints), self.tl_index, lane.header.stamp)
 
             rate.sleep()
 
