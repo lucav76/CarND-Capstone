@@ -9,6 +9,7 @@ import math
 
 import tf
 import numpy as np
+import copy
 
 '''
 This node will publish waypoints from the car's current position to some `x` distance ahead.
@@ -80,7 +81,7 @@ class WaypointUpdater(object):
                     # This will populate mod_waypoints during the first iteration of the loop
                     # This will handle no red lights being detected because "-1" is always < any waypoint index
                     self.change_tl_index = False
-                    self.mod_waypoints = self.base_waypoints
+                    self.mod_waypoints = copy.deepcopy(self.base_waypoints)
 
                     if self.tl_index > closest_point: # Do nothing if the tl_index behind the car
                         dist = self.distance(self.base_waypoints, closest_point, self.tl_index) # Distance from the car (assuming it's at the nearest waypoint) to the red light
