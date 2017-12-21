@@ -66,10 +66,10 @@ class WaypointUpdater(object):
                         closest_point = i
 
                 # TODO: For testing only: delete before deployment
-                if closest_point == 315:
+                if closest_point == 315: # Long stop
                     self.change_tl_index = True
                     self.tl_index = 417
-                elif closest_point > 412:
+                elif self.get_waypoint_velocity(self.mod_waypoints[closest_point]) == 0: # Start again once stopped
                     self.change_tl_index = True
                     self.tl_index = -1
                 # TODO End TODO
