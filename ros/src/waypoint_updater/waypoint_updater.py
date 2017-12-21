@@ -28,7 +28,8 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
 MAX_DECEL = 4. # Highest acceptable deceleration rate, in m/s^2
 TARGET_DECEL = 1. # Ideal deceleration rate, in m/s^2
-MAX_COMPLETE_STOP_DIST = 3. # If the traffic light is within this many meters, car can come to a complete stop
+MAX_COMPLETE_STOP_DIST = 2. # If the traffic light is within this many meters, car can come to a complete stop
+EXTRA_STOP_WPS = 25
 
 class WaypointUpdater(object):
     def __init__(self):
@@ -99,7 +100,9 @@ class WaypointUpdater(object):
                                 if dist < MAX_COMPLETE_STOP_DIST:
                                     vel_target = 0
                                 self.set_waypoint_velocity(self.base_waypoints, i, vel_target)
-                            self.max_waypoint_modified = self.tl_index
+                            for i in range(self.tl_index + 1, self.tl_index + EXTRA_STOP_WPS): # Set a few extra waypoints to zero speed
+                                self.set_waypoint_velocity(self.base_waypoints, i, 0.)
+                            self.max_waypoint_modified = self.tl_index + EXTRA_STOP_WPS
                             rospy.loginfo("tl_index_update stopping for tl; decel_rate %s", decel_rate)
 
                         else:
