@@ -65,6 +65,12 @@ class WaypointUpdater(object):
                         closest_distance = dist
                         closest_point = i
 
+                # TODO: For testing only: delete before deployment
+                if closest_point == 405:
+                    self.change_tl_index = True
+                    self.tl_index = 417
+                # TODO End TODO
+
                 # Update waypoint velocities if tl_index has changed
                 if self.change_tl_index:
                     # Whenever tl_index changes, calculate all waypoint speeds from the default waypoints
@@ -92,6 +98,9 @@ class WaypointUpdater(object):
                                 if dist < MAX_COMPLETE_STOP_DIST:
                                     vel_target = 0
                                 self.set_waypoint_velocity(self.mod_waypoints, i, vel_target)
+
+                        else:
+                            rospy.loginfo("tl_index_update cannot stop; decel required would be %s", decel_rate)
 
                 # final_waypoints is the next LOOKAHEAD_WPS waypoints starting with the closest
                 # (this assumes that the car should always travel through the waypoints in ascending order)
