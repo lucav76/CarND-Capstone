@@ -46,6 +46,7 @@ class WaypointUpdater(object):
         self.tl_index = -1 # -1 if no traffic point detected; otherwise equal to the waypoint nearest the nearest red light
         self.change_tl_index = False # Will be set to true whenever tl_index changes
         self.std_velocity = self.kmph2mps(rospy.get_param('/waypoint_loader/velocity')) # Max speed parameter, in m/s
+        self.max_waypoint_modified = 0 # The index of the furthest waypoint that has been modified, to speed up reseting base_waypoints after a light goes green
 
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
@@ -90,15 +91,22 @@ class WaypointUpdater(object):
 
                         if decel_rate < MAX_DECEL: # Drive right through the light if it's too close
                             # Modify waypoint speeds to stop in time for waypoint
-                            decel_rate = max(TARGET_DECEL, decel_rate) # Don't decelerate too slowly
-                            self.decelerate(closest_point, self.tl_index, decel_rate)
+                            decel_rate = max(TARGET_DECEL, decel_rate) # Don't decelerate too slowly.  This will also make the car accelerate if initially stopped.
+                            for i in range(closest_point, self.tl_index):
+                                dist = self.distance(self.base_waypoints, i, self.tl_index)
+                                vel_target = math.sqrt(2*decel_rate*dist)
+                                vel_target = min(vel_target, self.std_velocity) # Limit speed to '/waypoint_loader/velocity' parameter
+                                if dist < MAX_COMPLETE_STOP_DIST:
+                                    vel_target = 0
+                                self.set_waypoint_velocity(self.base_waypoints, i, vel_target)
+                            self.max_waypoint_modified = self.tl_index
                             rospy.loginfo("tl_index_update stopping for tl; decel_rate %s", decel_rate)
 
                         else:
-                            self.decelerate(closest_point, len(self.base_waypoints) - 1, TARGET_DECEL) # This should reset base_waypoints
+                            self.reset(closest_point)  # This should reset speeds
                             rospy.loginfo("tl_index_update cannot stop; decel required would be %s", decel_rate)
                     else:
-                        self.decelerate(closest_point, len(self.base_waypoints) - 1, TARGET_DECEL) # This should reset base_waypoints
+                        self.reset(closest_point) # This should reset speeds
                         rospy.loginfo("tl_index_update new tl_index of %s behind car", self.tl_index)
 
                 # final_waypoints is the next LOOKAHEAD_WPS waypoints starting with the closest
@@ -156,21 +164,11 @@ class WaypointUpdater(object):
     def kmph2mps(self, velocity_kmph):
         return (velocity_kmph * 1000.) / (60. * 60.)
 
-    def decelerate(self, closest_wp, stop_wp, decel_rate):
-        """Smoothly decelerates the car to a complete stop at a specified waypoint and deceleration rate"""
-        for i in range(closest_wp, stop_wp):
-            dist = self.distance(self.base_waypoints, i, stop_wp)
-            vel_target = math.sqrt(2 * decel_rate * dist)
-            vel_target = min(vel_target, self.std_velocity)  # Limit speed to the max speed
-            if dist < MAX_COMPLETE_STOP_DIST:
-                vel_target = 0
-            self.set_waypoint_velocity(self.base_waypoints, i, vel_target)
-
-        # Set speed to zero after the stop waypoint (unless the stop waypoint is the last waypoint)
-        last_wp = len(self.base_waypoints) - 1
-        if stop_wp < last_wp:
-            for i in range(stop_wp + 1, last_wp):
-                self.set_waypoint_velocity(self.base_waypoints, i, 0)
+    def reset(self, closest_wp):
+        """Resets all modified waypoints to the std velocity.  May cause some issues if there is a traffic light near the end of the road."""
+        if closest_wp < self.max_waypoint_modified:
+            for i in range(closest_wp, self.max_waypoint_modified):
+                self.set_waypoint_velocity(self.base_waypoints, i, self.std_velocity)
         pass
 
 
