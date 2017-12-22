@@ -61,6 +61,8 @@ class TLDetector(object):
                 wp, state = self.process_traffic_lights()
                 if state == 0:
                     self.upcoming_red_light_pub.publish(Int32(wp))
+                else:
+                    self.upcoming_red_light_pub.publish(Int32(-1))
             rate.sleep()
             
     def pose_cb(self, msg):
@@ -200,7 +202,7 @@ class TLDetector(object):
 
         if light:
             state = self.get_light_state(light)
-            return light_wp, state
+            # return light_wp, state
         # self.waypoints = None
         return -1, TrafficLight.UNKNOWN
 
