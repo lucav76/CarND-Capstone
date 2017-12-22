@@ -131,8 +131,9 @@ class WaypointUpdater(object):
 
     def traffic_cb(self, msg):
         """If the waypoint of the next traffic light changes, update it and flag the main loop to update the waypoint speeds"""
-        if msg != self.tl_index:
-            self.tl_index = msg
+        tl_wp = msg.data
+        if tl_wp != self.tl_index:
+            self.tl_index = tl_wp
             self.change_tl_index = True
             rospy.loginfo("tl_index_update tl_index changed to %s", self.tl_index)
         pass
