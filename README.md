@@ -1,6 +1,9 @@
 - [Self Driving Car System Integration](#sec-1)
 - [Team: Total Recall Dryvers](#sec-2)
 - [Structure](#sec-3)
+  - [Perception](#sec-3-1)
+  - [Planning](#sec-3-2)
+  - [Control](#sec-3-3)
 - [Hardware Requirement](#sec-4)
 - [Software Requirement](#sec-5)
 - [Build](#sec-6)
@@ -14,19 +17,77 @@
 
 This is the final capstone project in Udacity's Self-Driving Car Nanodegree. In this project, we write code that will automatically drive a "Carla." The Carla is an actual self-driving car equipped with necessary sensors and the drive-by-wire module.
 
+<div align="center">
+  <img src="./readme_assets/simulator.gif" alt="simulator" width="50%" />
+  <p>Testing our code on the Udacity simulator</p>
+</div>
+
 # Team: Total Recall Dryvers<a id="sec-2"></a>
 
--   [Luca Venturi](https://github.com/lucav76)
--   [Jochen](https://github.com/jocmom)
--   [Tim Aske](https://github.com/TimSoft77)
--   [Krishtof Korda](https://github.com/Krishtof-Korda)
--   [Kyung Mo Kweon](https://github.com/kkweon)
+| Name                                                | Email                           |
+|--------------------------------------------------- |------------------------------- |
+| [Krishtof Korda](https://github.com/Krishtof-Korda) | krishtofkorda+udacity@gmail.com |
+| [Kyung Mo Kweon](https://github.com/kkweon)         | kkweon@gmail.com                |
+| [Jochen Mombach](https://github.com/jocmom)         | jochen.mombach@gmail.com        |
+| [Luca Venturi](https://github.com/lucav76)          | lventuri76@gmail.com            |
+| [Tim Aske](https://github.com/TimSoft77)            | twaske@gmail.com                |
 
 # Structure<a id="sec-3"></a>
 
 Our project consists of 3 modules: **perception**, **planning**, and **control**.
 
-<img src="./readme_assets/structure.png" alt="structure" />
+<div align="center">
+  <img src="./readme_assets/structure.png" alt="structure" width="100%" />
+</div>
+
+## Perception<a id="sec-3-1"></a>
+
+<div align="center">
+<img src="./readme_assets/tl-detector-ros-graph.png" alt="tl detector" width="100%" />
+</div>
+
+The perception module is mainly responsible for detecting roads and its environment. It is also responsible for detecting traffic lights where we used deep learning to classify the traffic lights into 4 different labels.
+
+```python
+def get_classification(self, image):
+    """Determines the color of the traffic light in the image
+    Args:
+        image (cv::Mat): image containing the traffic light
+
+    Returns:
+        int: ID of traffic light color (specified in styx_msgs/TrafficLight)
+    """
+    # Used Keras to detect label
+    self.predicted_label =  self.ldac.infer(ImageWrap(image), annotate=True, desired_labels=["Red", "Green", "Yellow"])
+
+    # Convert the label to the ID such that the SDC can understand
+    label_to_id_map = {"Green": 2, "Yellow": 1, "Red": 0, "Off": 4}
+    self.COLORID = label_to_id_map[self.predicted_label]
+
+    return TrafficLight.self.COLORID
+```
+
+More information can be found in [tl detector](https://github.com/lucav76/CarND-Capstone/tree/ta/waypoint7/ros/src/tl_detector) directory.
+
+## Planning<a id="sec-3-2"></a>
+
+<div align="center">
+  <img src="./readme_assets/waypoint-updater-ros-graph.png" alt="Waypoint Updater" width="100%" />
+</div>
+
+The planning module is responsible for generating next trajectories of the vehicle. The main idea is that the car look ahead into future positions and also make sure it plans accordingly when it encounters traffic lights. For example, it should decelerate when there is a traffic light in RED.
+
+Source code can be found in the [Waypoint Updater](https://github.com/lucav76/CarND-Capstone/tree/master/ros/src/waypoint_updater) directory.
+
+## Control<a id="sec-3-3"></a>
+
+<div align="center">
+  <img src="./readme_assets/dbw-node-ros-graph.png" alt="Drive By Wire Node" width="100%" />
+</div>
+
+The Carla is equipped with a drive-by-wire (dbw) system, meaning the throttle, brake, and steering have electronic control Thus, we need to connect our code to the DBW system of the vehicle. It receives information such as current velocity and dbw switch(if the car is under the DBW or human driver). It then publishes throttle, steering, and brake commands.
+
+More information can be found in the [Twist Controller](https://github.com/lucav76/CarND-Capstone/tree/ta/waypoint7/ros/src/twist_controller) directory.
 
 # Hardware Requirement<a id="sec-4"></a>
 
