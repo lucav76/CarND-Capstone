@@ -28,7 +28,7 @@ This is the final capstone project in Udacity's Self-Driving Car Nanodegree. In 
 | [Krishtof Korda](https://github.com/Krishtof-Korda) | krishtofkorda+udacity@gmail.com |
 | [Kyung Mo Kweon](https://github.com/kkweon)         | kkweon@gmail.com                |
 | [Jochen Mombach](https://github.com/jocmom)         | jochen.mombach@gmail.com        |
-| [Luca Venturi](https://github.com/lucav76)          | lventuri76@gmail.com            |
+| [Luca Venturi](https://github.com/lucav76)          | l.venturi@libero.it             |
 | [Tim Aske](https://github.com/TimSoft77)            | twaske@gmail.com                |
 
 # Structure<a id="sec-3"></a>
