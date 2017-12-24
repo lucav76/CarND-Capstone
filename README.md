@@ -9,9 +9,8 @@
 - [Build](#sec-6)
   - [Without Docker](#sec-6-1)
   - [With Docker](#sec-6-2)
-    - [Running](#sec-6-2-1)
-    - [Cleaning](#sec-6-2-2)
 - [Real world testing](#sec-7)
+
 
 # Self Driving Car System Integration<a id="sec-1"></a>
 
