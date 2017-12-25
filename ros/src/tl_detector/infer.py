@@ -22,27 +22,67 @@ print("TensorFlow:" + tf.__version__)
 K1.set_learning_phase(0)
 K2.set_learning_phase(0)
 
+from enum import Enum
+
+class Detection_Model(Enum):
+    SSD_INCEPTION = "ssd_inc_frozen_inference_graph.pb"
+    RCNN_INCEPTION = "rcnn_inc_inference_graph.pb"
+    RCNN_RESNET_101 = "rcnn_res101_frozen_inference_graph.pb"
+
+
 class LightDetectionAndClassification:
-    def __init__(self):
-        self.det = LightDetection("frozen_inference_graph.pb")
+    def __init__(self, load_frozen = True, detection_model = Detection_Model.RCNN_INCEPTION):
+
+        print("Detection Frozen Graph File: " + detection_model.name + " - " + str(detection_model.value))
+        self.det = LightDetection(detection_model.value)
         self.det.load_graph()
         self.classifier_net = net.LightNet(None, False)
         #self.classifier_model = self.classifier_net.create_model()
-        self.classifier_model = load_model('model-prod-ck.h5')
 
-        freeze = True
+        use_frozen = False
 
-        if (freeze):
-            print("Freezing the graph...")
-            frozen_graph = freeze_session(K1.get_session(), output_names=[self.classifier_model.output.op.name])
+        if load_frozen:
+            print("Loading frozen graph")
+            self.load_model_graph('model-prod-frozen.pb')
+        else:
+            print("Loading Keras graph")
+            self.classifier_model = load_model('model-prod-ck.h5')
+            print("Model:" + str(self.classifier_model))
 
-            print("Saving the graph in TF...")
-            from tensorflow.python.framework import graph_io
-            graph_io.write_graph(frozen_graph, ".", "model_main.pb", as_text=False)
-            print("Done...")
 
-        print("Model:")
-        print(self.classifier_model)
+
+    def freeze(self):
+        # Freeze
+        print("Freezing the graph...")
+        print("Output: " + str(self.classifier_model.output.op.name))
+        print("Input: " + str(self.classifier_model.input.op.name))
+
+        frozen_graph = freeze_session(K1.get_session(), output_names=[self.classifier_model.output.op.name])
+
+        print("Saving the graph in TF...")
+        from tensorflow.python.framework import graph_io
+        graph_io.write_graph(frozen_graph, ".", "model_main.pb", as_text=False)
+        print("Done...")
+
+    def load_model_graph(self, graph_file):
+        """Loads a frozen inference graph"""
+        graph = tf.Graph()
+        with graph.as_default():
+            od_graph_def = tf.GraphDef()
+            with tf.gfile.GFile(graph_file, 'rb') as fid:
+                serialized_graph = fid.read()
+                od_graph_def.ParseFromString(serialized_graph)
+                tf.import_graph_def(od_graph_def, name='')
+        self.classifier_detection_graph = graph
+
+        # The classification of the object (integer id).
+        self.detection_classes = self.classifier_detection_graph.get_tensor_by_name('fcout/Softmax:0')
+
+        # The input placeholder for the image.
+        # `get_tensor_by_name` returns the Tensor with the associated name in the Graph.
+        self.image_tensor = self.classifier_detection_graph.get_tensor_by_name('Normalize_input:0')
+
+        self.sess = tf.Session(graph=self.classifier_detection_graph)
 
     def area(self, box):
         y1, x1, y2, x2 = box
@@ -92,7 +132,8 @@ class LightDetectionAndClassification:
             traffic_light_64_64 = cv2.resize(traffic_light, (64, 64), interpolation=cv2.INTER_CUBIC)
             traffic_light_64_64 = utils.resize_to_1_if_required(traffic_light_64_64)
 
-            predictions = self.classifier_model.predict(np.array([traffic_light_64_64]))[0]
+            predictions = self.predict(np.array([traffic_light_64_64]))
+            print("Raw predictions: " + str(predictions))
             predicted_class = np.argmax(predictions)
             predicted_label = self.classifier_net.data_labes[predicted_class]
 
@@ -105,6 +146,11 @@ class LightDetectionAndClassification:
 
         return None, None, None, None, None, None
 
+    def predict(self, img):
+        classes = self.sess.run(self.detection_classes, feed_dict={self.image_tensor: img})
+
+        return classes
+
     def infer(self, image_wrap, annotate, desired_labels = None):
         start = self.current_milli_time()
         boxes = self.det.infer(image_wrap)
@@ -115,7 +161,7 @@ class LightDetectionAndClassification:
 
         print("Boxes: ", boxes)
         boxes_ascending = sorted(boxes, key=lambda box: self.area(box), reverse=False)
-        print("Boxes Ascen ding: ", boxes_ascending)
+        print("Boxes Ascending: ", boxes_ascending)
 
         box, predictions, predicted_class, predicted_label, img, traffic_light = self.find_best_box(image_wrap, boxes_ascending, desired_labels)
 

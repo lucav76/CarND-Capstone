@@ -2,6 +2,11 @@ import aug
 import cv2
 import net
 import utils
+import keras
+import tensorflow as tf
+
+print("Keras version: " + keras.__version__)
+print("Tensorflow version: " + tf.__version__)
 
 a = [0,1,2,3,4,5,6,7,8,9,"a","b","C","D"]
 print(a)

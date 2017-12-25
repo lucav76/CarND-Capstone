@@ -1,8 +1,8 @@
 import infer
 
-ldac = infer.LightDetectionAndClassification()
+ldac = infer.LightDetectionAndClassification(detection_model = infer.Detection_Model.RCNN_RESNET_101)
 
-desired_labels=["Red", "Green", "Yellow", "RedLeft", "GreenLeft", "YellowLeft"]
+desired_labels=["Red", "Green", "Yellow"]
 print("\n\n\n")
 ldac.infer_and_save("traffic.jpg", desired_labels=desired_labels)
 print("\n\n\n")
