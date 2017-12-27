@@ -3,6 +3,7 @@
 import rospy
 from geometry_msgs.msg import PoseStamped
 from styx_msgs.msg import Lane, Waypoint
+from std_msgs.msg import Int32
 
 import math
 
@@ -25,42 +26,85 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
-
+MAX_DECEL = 4. # Highest acceptable deceleration rate, in m/s^2
+TARGET_DECEL = 1. # Ideal deceleration rate, in m/s^2
+MAX_COMPLETE_STOP_DIST = 2. # If the traffic light is within this many meters, car can come to a complete stop
+EXTRA_STOP_WPS = 25
 
 class WaypointUpdater(object):
     def __init__(self):
         rospy.init_node('waypoint_updater')
 
+        # Subscribers and publishers
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
-
-        # TODO: Add a subscriber for /traffic_waypoint and /obstacle_waypoint below
-
-
+        rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
-        # TODO: Add other member variables you need below
-        self.base_waypoints = None
-        self.pose = None
+        # Constants
+        self.base_waypoints = None # taken from waypoint_loader
+        self.pose = None # current position of the car
+        self.tl_index = -1 # -1 if no traffic point detected; otherwise equal to the waypoint nearest the nearest red light
+        self.change_tl_index = False # Will be set to true whenever tl_index changes
+        self.std_velocity = self.kmph2mps(rospy.get_param('/waypoint_loader/velocity')) # Max speed parameter, in m/s
+        self.max_waypoint_modified = 0 # The index of the furthest waypoint that has been modified, to speed up reseting base_waypoints after a light goes green
 
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
             if self.base_waypoints and self.pose:
+                # Find the waypoint closest to the car
                 # Get the position and yaw of the car in euler coordinates
                 car_x = self.pose.position.x
                 car_y = self.pose.position.y
-
-                # Loop through the waypoints to find the closest that is ahead of the car
+                # Initialize closest point and its distance
                 closest_point = None
                 closest_distance = float('inf')
+                # Loop through all the waypoints
                 for i in range(0, len(self.base_waypoints)):
                     waypoint = self.base_waypoints[i]
-                    distance = math.sqrt((car_x - waypoint.pose.pose.position.x) ** 2 + (car_y - waypoint.pose.pose.position.y) ** 2)
-                    if distance < closest_distance:
-                        closest_distance = distance
+                    dist = math.sqrt((car_x - waypoint.pose.pose.position.x) ** 2 + (car_y - waypoint.pose.pose.position.y) ** 2)
+                    if dist < closest_distance:
+                        closest_distance = dist
                         closest_point = i
 
+                # Update waypoint velocities if tl_index has changed
+                if self.change_tl_index:
+                    # Whenever tl_index changes, calculate all waypoint speeds
+                    # This will handle no red lights being detected because "-1" is always < any waypoint index
+                    self.change_tl_index = False
+
+                    if self.tl_index > closest_point: # Do nothing if the tl_index behind the car
+                        dist = self.distance(self.base_waypoints, closest_point, self.tl_index) # Distance from the car (assuming it's at the nearest waypoint) to the red light
+                        car_vel = self.get_waypoint_velocity(self.base_waypoints[closest_point])
+                        # Assume the car is currently going at the speed of the current waypoint
+                        # Should be conservative
+                        # Will not work if tl_index bounces around for a single traffic light
+                        decel_rate = car_vel**2/(2*dist) # Deceleration required to stop by light, per equation vf^2 = vi^2 + 2ad, vf = 0
+
+                        if decel_rate < MAX_DECEL: # Drive right through the light if it's too close
+                            # Modify waypoint speeds to stop in time for waypoint
+                            decel_rate = max(TARGET_DECEL, decel_rate) # Don't decelerate too slowly.  This will also make the car accelerate if initially stopped.
+                            for i in range(closest_point, self.tl_index):
+                                dist = self.distance(self.base_waypoints, i, self.tl_index)
+                                vel_target = math.sqrt(2*decel_rate*dist)
+                                vel_target = min(vel_target, self.std_velocity) # Limit speed to '/waypoint_loader/velocity' parameter
+                                if dist < MAX_COMPLETE_STOP_DIST:
+                                    vel_target = 0
+                                self.set_waypoint_velocity(self.base_waypoints, i, vel_target)
+                            for i in range(self.tl_index + 1, self.tl_index + EXTRA_STOP_WPS): # Set a few extra waypoints to zero speed
+                                self.set_waypoint_velocity(self.base_waypoints, i, 0.)
+                            self.max_waypoint_modified = self.tl_index + EXTRA_STOP_WPS
+                            rospy.loginfo("tl_index_update stopping for tl; decel_rate %s", decel_rate)
+
+                        else:
+                            self.reset(closest_point)  # This should reset speeds
+                            rospy.loginfo("tl_index_update cannot stop; decel required would be %s", decel_rate)
+                    else:
+                        self.reset(closest_point) # This should reset speeds
+                        rospy.loginfo("tl_index_update new tl_index of %s behind car", self.tl_index)
+
                 # final_waypoints is the next LOOKAHEAD_WPS waypoints starting with the closest
+                # (this assumes that the car should always travel through the waypoints in ascending order)
                 final_waypoints = self.base_waypoints[closest_point:closest_point + LOOKAHEAD_WPS]  # final_waypoints will get shorter as the last waypoint is approached
 
                 # Publish
@@ -69,7 +113,7 @@ class WaypointUpdater(object):
                 lane.header.stamp = rospy.Time.now()
                 lane.waypoints = final_waypoints
                 self.final_waypoints_pub.publish(lane)
-                rospy.loginfo("waypoint_updater published final_waypoints; closest_point %s, closest_distance %s, len(final_waypoints) %s, time %s", closest_point, closest_distance, len(final_waypoints), lane.header.stamp)
+                rospy.loginfo("waypoint_updater published final_waypoints; closest_point %s, closest_distance %s, car_vel %s, len(final_waypoints) %s, tl_index %s, time %s", closest_point, closest_distance, self.get_waypoint_velocity(self.base_waypoints[closest_point]), len(final_waypoints), self.tl_index, lane.header.stamp)
 
             rate.sleep()
 
@@ -86,7 +130,12 @@ class WaypointUpdater(object):
         pass
 
     def traffic_cb(self, msg):
-        # TODO: Callback for /traffic_waypoint message. Implement
+        """If the waypoint of the next traffic light changes, update it and flag the main loop to update the waypoint speeds"""
+        tl_wp = msg.data
+        if tl_wp != self.tl_index:
+            self.tl_index = tl_wp
+            self.change_tl_index = True
+            rospy.loginfo("tl_index_update tl_index changed to %s", self.tl_index)
         pass
 
     def obstacle_cb(self, msg):
@@ -106,6 +155,16 @@ class WaypointUpdater(object):
             dist += dl(waypoints[wp1].pose.pose.position, waypoints[i].pose.pose.position)
             wp1 = i
         return dist
+
+    def kmph2mps(self, velocity_kmph):
+        return (velocity_kmph * 1000.) / (60. * 60.)
+
+    def reset(self, closest_wp):
+        """Resets all modified waypoints to the std velocity.  May cause some issues if there is a traffic light near the end of the road."""
+        if closest_wp < self.max_waypoint_modified:
+            for i in range(closest_wp, self.max_waypoint_modified):
+                self.set_waypoint_velocity(self.base_waypoints, i, self.std_velocity)
+        pass
 
 
 if __name__ == '__main__':
