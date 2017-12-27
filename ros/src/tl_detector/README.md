@@ -59,6 +59,10 @@ To simplify the logic, while reducing the memory consumption and improving the g
 
 Dataset and DataClasses have been put in the **LightNet** class, which known how the network needs to be trained, and just need to be given the directories with the images. The images are classified in directories, as it makes easier to find problems.
 
+The following diagram shows the main classes defined in the project:
+
+![Classes](classes.jpg)
+
 ## Inference
 While testing, it become obvious that Keras models saved on Python 3 were not compatible with Python 2. To solve the problem, and hopefully increase performance, we froze the graph and exported it. In this way, while the training has been perfomed with Keras, the inference is done purely with TensorFlow.
 
