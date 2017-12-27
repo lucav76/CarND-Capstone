@@ -26,6 +26,7 @@ Traffic Light Classifier
 ===
 I wanted the classifier to be very fast and relatively reliable. I started from LeNet, and I tuned the network to improve its precision to around 94%.
 The network uses 3 convolutional layers and 4 fully connected layers, and accepts images of 64x64 pixels. The complete diagram is the following:
+
 ![CNN Model](model.png)
 
 Attempts to use 4 layers seemd to show that the network was starting to overfit.
