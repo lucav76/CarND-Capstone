@@ -66,7 +66,7 @@ def get_classification(self, image):
     return TrafficLight.self.COLORID
 ```
 
-More information can be found in [tl detector](https://github.com/lucav76/CarND-Capstone/tree/ta/waypoint7/ros/src/tl_detector) directory.
+More information can be found in [tl detector](ros/src/tl_detector/README.md) directory.
 
 ## Planning<a id="sec-3-2"></a>
 
