@@ -136,6 +136,9 @@ class ImageWrap:
 
         return width, height
 
+    def resize(self, percent_x, percent_y):
+        self.image = cv2.resize(self.image, None, fx=percent_x, fy=percent_x)
+
     def image_np(self, bgr):
         return np.expand_dims(self.get_image_bgr() if bgr else self.get_image_rgb(), 0)
 
