@@ -9,7 +9,7 @@ Our pipeline is diveded in two stages:
 
 Traffic Light boxes detection
 ==
-For the Traffic Light Detection, we wanted to use a detector already trained. There are several in the Model Zoo of TensorFlow, able to hit seveal performance/precision points.
+For the Traffic Light Detection, we wanted to use a detector already trained. There are several in the Model Zoo of TensorFlow, able to hit several performance/precision points.
 The goal is to find the traffic lights, so that we can feed them to the Neural Network for classification.
 
 The most interesting seemed to be:
@@ -68,5 +68,5 @@ While testing, it become obvious that Keras models saved on Python 3 were not co
 
 ## Dealing with False Negatives
 The network has been designed to detect only one traffic light, as this was the requirement for Udacity. However it might detect more than one and skip the false positives.
-A problem are however the false negative, as detector might have problems to find the traffic lights, sometimes.
-A way to solve this issue, is to assume that if there are no detections, the last detection si still valid, at least for a few frames.
+A problem is however the false negative, as detector might have problems to find the traffic lights, sometimes.
+A way to solve this issue, is to assume that if there are no detections, the last detection is still valid, at least for a few frames.
