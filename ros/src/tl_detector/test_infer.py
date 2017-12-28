@@ -1,6 +1,6 @@
 import infer
 
-ldac = infer.LightDetectionAndClassification(detection_model = infer.Detection_Model.RCNN_RESNET_101)
+ldac = infer.LightDetectionAndClassification(detection_model = infer.Detection_Model.SSD_MOBILE_NET)
 
 desired_labels=["Red", "Green", "Yellow"]
 print("\n\n\n")
@@ -23,3 +23,17 @@ print("\n\n\n")
 ldac.infer_and_save("traffic9.jpg", desired_labels=desired_labels)
 print("\n\n\n")
 ldac.infer_and_save("traffic10.jpg", desired_labels=desired_labels)
+
+print("\n\n\n")
+ldac.infer_and_save("left0000.jpg", desired_labels=desired_labels)
+print("\n\n\n")
+ldac.infer_and_save("left0003.jpg", desired_labels=desired_labels)
+print("\n\n\n")
+ldac.infer_and_save("left0011.jpg", desired_labels=desired_labels)
+print("\n\n\n")
+ldac.infer_and_save("left0027.jpg", desired_labels=desired_labels)
+print("\n\n\n")
+ldac.infer_and_save("left0140.jpg", desired_labels=desired_labels)
+print("\n\n\n")
+ldac.infer_and_save("left0701.jpg", desired_labels=desired_labels)
+
