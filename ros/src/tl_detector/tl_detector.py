@@ -58,26 +58,32 @@ class TLDetector(object):
     def loop(self):
         rate = rospy.Rate(10) # 10Hz
         while not rospy.is_shutdown():
-            if self.lights is not None:
-                light_wp, state = self.process_traffic_lights()
+            if not self.has_image:
+                rospy.loginfo("TL_DETECTOR: No images received")
+                continue
+            if not self.lights:
+                rospy.loginfo("TL_DETECTOR: No traffic lights received")
+                continue
+
                 '''
                 Publish upcoming red lights at desired frequency.
                 Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
                 of times till we start using it. Otherwise the previous stable state is
                 used.
                 '''
-                if self.state != state:
-                    self.state_count = 0
-                    self.state = state
-                elif self.state_count >= STATE_COUNT_THRESHOLD:
-                    self.last_state = self.state
-                    light_wp = light_wp if state == TrafficLight.RED else -1
-                    self.last_wp = light_wp
-                    self.upcoming_red_light_pub.publish(Int32(light_wp))
-                else:
-                    self.upcoming_red_light_pub.publish(Int32(self.last_wp))
-                self.state_count += 1
-            
+            light_wp, state = self.process_traffic_lights()
+            if self.state != state:
+                self.state_count = 0
+                self.state = state
+            elif self.state_count >= STATE_COUNT_THRESHOLD:
+                self.last_state = self.state
+                light_wp = light_wp if state == TrafficLight.RED else -1
+                self.last_wp = light_wp
+                self.upcoming_red_light_pub.publish(Int32(light_wp))
+            else:
+                self.upcoming_red_light_pub.publish(Int32(self.last_wp))
+            self.state_count += 1
+
     def pose_cb(self, msg):
         self.pose = msg
 
@@ -98,8 +104,7 @@ class TLDetector(object):
         """
         self.has_image = True
         self.camera_image = msg
-        light_wp, state = self.process_traffic_lights()
-
+        # light_wp, state = self.process_traffic_lights()
 
     def distance(self, a, b):
         return math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + (a.z - b.z)**2)
@@ -179,17 +184,17 @@ class TLDetector(object):
                 return -1, TrafficLight.UNKNOWN
             light = stop_line_wp_id
 
-            rospy.loginfo("TL_DETECTOR: Car   x: %.2f, y: %.2f",
-                          self.pose.pose.position.x,
-                          self.pose.pose.position.y)
-            rospy.loginfo("TL_DETECTOR: Stop  x: %.2f, y: %.2f, id: %i",
-                          stop_line_pose.position.x,
-                          stop_line_pose.position.y,
-                          stop_line_wp_id)
-            rospy.loginfo("TL_DETECTOR: Light x: %.2f, y: %.2f, id: %i, state: %i",
-                          traffic_light.pose.pose.position.x,
-                          traffic_light.pose.pose.position.y,
-                          traffic_light_wp_id, traffic_light.state)
+            rospy.logdebug("TL_DETECTOR: Car   x: %.2f, y: %.2f",
+                           self.pose.pose.position.x,
+                           self.pose.pose.position.y)
+            rospy.logdebug("TL_DETECTOR: Stop  x: %.2f, y: %.2f, id: %i",
+                           stop_line_pose.position.x,
+                           stop_line_pose.position.y,
+                           stop_line_wp_id)
+            rospy.logdebug("TL_DETECTOR: Light x: %.2f, y: %.2f, id: %i, state: %i",
+                           traffic_light.pose.pose.position.x,
+                           traffic_light.pose.pose.position.y,
+                           traffic_light_wp_id, traffic_light.state)
 
         if light:
             # Use ground truth of the simulator to determine light state
