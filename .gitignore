@@ -5,3 +5,8 @@ devel
 
 profile.tmp
 /.DS_Store
+/README.org
+bags
+.python-version
+simulator
+*.rviz
