@@ -152,9 +152,14 @@ class LightDetectionAndClassification:
 
         return classes
 
-    def infer(self, image_wrap, annotate, desired_labels = None):
+    def infer(self, image_wrap, annotate, desired_labels = None, resize = True, confidence_cutoff = 0.6):
         start = self.current_milli_time()
-        boxes = self.det.infer(image_wrap)
+
+        if resize:
+            image_wrap.resize_crop_or_pad_horizontal(300)
+            print("Resize to " + str(image_wrap.get_size()))
+
+        boxes = self.det.infer(image_wrap, confidence_cutoff=confidence_cutoff)
         t1 = self.current_milli_time()
 
         if len(boxes) == 0:
@@ -177,11 +182,11 @@ class LightDetectionAndClassification:
 
 
 
-    def infer_and_save(self, image_file, desired_labels = None):
+    def infer_and_save(self, image_file, desired_labels = None, resize = True, confidence_cutoff = 0.6):
         print(image_file)
         image_wrap = ImageWrap(cv2.imread("assets\\" + image_file), True)
 
-        biggest_box, predictions, prediction_class, prediction_label, annotated, img_box = self.infer(image_wrap, True, desired_labels)
+        biggest_box, predictions, prediction_class, prediction_label, annotated, img_box = self.infer(image_wrap, True, desired_labels=desired_labels, resize=resize, confidence_cutoff = confidence_cutoff)
 
         print("Predictions:" + str(predictions))
         print("Biggest box: " + str(biggest_box) + " - " + str(prediction_class) + " - " + str(prediction_label))
@@ -189,7 +194,7 @@ class LightDetectionAndClassification:
         image_wrap.save("out_infer\\" + image_file)
         cv2.imwrite("out_infer\\roi_" + image_file, img_box)
 
-    def infer_and_save_dir(self, path, desired_labels = None):
+    def infer_and_save_dir(self, path, desired_labels = None, resize = True, confidence_cutoff = 0.6):
         files = utils.files_only(path)
 
         for file in files:
@@ -198,7 +203,7 @@ class LightDetectionAndClassification:
             image_wrap = ImageWrap(cv2.imread(file), True)
 
             print("File: " + str(file))
-            biggest_box, predictions, prediction_class, prediction_label, annotated, img_box = self.infer(image_wrap, True, desired_labels=desired_labels)
+            biggest_box, predictions, prediction_class, prediction_label, annotated, img_box = self.infer(image_wrap, True, desired_labels=desired_labels, resize=resize, confidence_cutoff = confidence_cutoff)
 
             if prediction_label is None:
                 continue
