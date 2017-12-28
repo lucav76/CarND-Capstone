@@ -1,5 +1,5 @@
 from styx_msgs.msg import TrafficLight
-from infer import LightDetectionAndClassification
+from infer import LightDetectionAndClassification, Detection_Model
 from detection import ImageWrap
 
 class TLClassifier(object):
