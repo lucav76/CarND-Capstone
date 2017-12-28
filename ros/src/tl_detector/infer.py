@@ -33,8 +33,8 @@ class Detection_Model(Enum):
 
 class LightDetectionAndClassification:
     def __init__(self, load_frozen = True, detection_model = Detection_Model.SSD_INCEPTION):
-
         print("Detection Frozen Graph File: " + detection_model.name + " - " + str(detection_model.value))
+
         self.det = LightDetection(detection_model.value)
         self.det.load_graph()
         self.classifier_net = net.LightNet(None, False)
