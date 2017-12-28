@@ -3,7 +3,7 @@ Traffic Light Detection Module
 
 The traffic light detection could be done in several ways, but we decided to use a neural network as it seemed a modern and flexible approach.
 
-Our pipeline is diveded in two stages:
+Our pipeline is divided in two stages:
 * Traffic Light detection, using a detector already trained on COCO
 * Traffic light classification, using a custom Neural Network
 
