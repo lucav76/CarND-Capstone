@@ -5,7 +5,7 @@ from keras.layers.pooling import MaxPooling2D
 from keras.layers.normalization import BatchNormalization
 from keras.layers import Cropping2D
 import numpy as np
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import aug
 from utils import files_only
 from keras.optimizers import Adam, SGD, Adadelta, Adagrad, Adamax, RMSprop, Nadam
@@ -95,15 +95,15 @@ def show_history(history_object):
     print(history_object.history.keys())
 
     ### plot the training and validation loss for each epoch
-    plt.plot(history_object.history['loss'])
-    plt.plot(history_object.history['val_loss'])
-    plt.plot(history_object.history['acc'])
-    plt.plot(history_object.history['val_acc'])
-    plt.title('model mean squared error loss')
-    plt.ylabel('mean squared error loss')
-    plt.xlabel('epoch')
-    plt.legend(['T loss', 'V loss', 'T acc', 'V acc'], loc='upper left')
-    plt.show()
+    #plt.plot(history_object.history['loss'])
+    #plt.plot(history_object.history['val_loss'])
+    #plt.plot(history_object.history['acc'])
+    #plt.plot(history_object.history['val_acc'])
+    #plt.title('model mean squared error loss')
+    #plt.ylabel('mean squared error loss')
+    #plt.xlabel('epoch')
+    #plt.legend(['T loss', 'V loss', 'T acc', 'V acc'], loc='upper left')
+    #plt.show()
 
 class LightNet:
     def __init__(self, base_dirs, fast_training):
