@@ -6,7 +6,7 @@ class TLClassifier(object):
     def __init__(self):
 
         #Create an instance of traffic light neural network classifier
-        self.ldac = LightDetectionAndClassification(load_frozen = True, detection_model = Detection_Model.RCNN_INCEPTION)
+        self.ldac = LightDetectionAndClassification()
         
         pass
         

@@ -49,7 +49,8 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
-        self.publish_ground_truth = True
+        self.publish_ground_truth = False
+        self.has_image = False
 
         self.loop()
         # rospy.spin()
@@ -58,6 +59,13 @@ class TLDetector(object):
         rate = rospy.Rate(10) # 10Hz
         while not rospy.is_shutdown():
             if self.lights is not None and self.publish_ground_truth:
+                wp, state = self.process_traffic_lights()
+                if state == 0:
+                    self.upcoming_red_light_pub.publish(Int32(wp))
+                else:
+                    self.upcoming_red_light_pub.publish(Int32(-1))
+                    
+            if self.lights is not None and not self.publish_ground_truth:
                 wp, state = self.process_traffic_lights()
                 if state == 0:
                     self.upcoming_red_light_pub.publish(Int32(wp))
@@ -165,7 +173,7 @@ class TLDetector(object):
         stop_line_positions = self.config['stop_line_positions']
         if self.pose:
             car_wp_id = self.get_closest_waypoint(self.pose.pose, self.waypoints)
-            if self.publish_ground_truth:
+            if self.publish_ground_truth: # Use ground truth of the simulator to determine light state
                 # use traffic light waypoints instead of all
                 traffic_light_wp_id = self.get_closest_waypoint(self.pose.pose, self.lights)
                 if traffic_light_wp_id < 0 or traffic_light_wp_id >= len(self.lights):
@@ -199,12 +207,43 @@ class TLDetector(object):
 
 
         #TODO find the closest visible traffic light (if one exists)
+        
+            else: # Use Neural Net to determine traffic light state
+                # use traffic light waypoints instead of all
+                traffic_light_wp_id = self.get_closest_waypoint(self.pose.pose, self.lights)
+                if traffic_light_wp_id < 0 or traffic_light_wp_id >= len(self.lights):
+                    rospy.logwarn("TL_DETECTOR: Invalid traffic light idx %i", traffic_light_wp_id)
+                    return -1, TrafficLight.UNKNOWN
+                light = self.lights[traffic_light_wp_id]
+                # get closest stopline waypoint index
+                stop_line_pose = Pose()
+                # use the fact that stop line waypoint index correspond to traffic light waypoints
+                stop_line_pose.position.x = stop_line_positions[traffic_light_wp_id][0]
+                stop_line_pose.position.y = stop_line_positions[traffic_light_wp_id][1]
+                # back to all waypoints
+                stop_line_wp_id = self.get_closest_waypoint(stop_line_pose, self.waypoints)
+                if stop_line_wp_id < 0:
+                    rospy.logwarn("TL_DETECTOR: Invalid stop line idx %i", stop_line_wp_id)
+                    return -1, TrafficLight.UNKNOWN
 
-        if light:
-            state = self.get_light_state(light)
-            # return light_wp, state
-        # self.waypoints = None
-        return -1, TrafficLight.UNKNOWN
+                if light:
+                    state = self.get_light_state(light)
+                    
+                    rospy.loginfo("TL_DETECTOR: Car   x: %.2f, y: %.2f",
+                              self.pose.pose.position.x,
+                              self.pose.pose.position.y)
+                    rospy.loginfo("TL_DETECTOR: Stop  x: %.2f, y: %.2f, id: %i",
+                              stop_line_pose.position.x,
+                              stop_line_pose.position.y,
+                              stop_line_wp_id)
+                    rospy.loginfo("TL_DETECTOR: Light x: %.2f, y: %.2f, id: %i, state: %i",
+                              traffic_light.pose.pose.position.x,
+                              traffic_light.pose.pose.position.y,
+                              traffic_light_wp_id, state)
+                    
+                    return stop_line_wp_id, state
+                # self.waypoints = None
+                return -1, TrafficLight.UNKNOWN
 
 if __name__ == '__main__':
     try:
