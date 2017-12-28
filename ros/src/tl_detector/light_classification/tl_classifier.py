@@ -8,8 +8,6 @@ class TLClassifier(object):
         #Create an instance of traffic light neural network classifier
         self.ldac = LightDetectionAndClassification()
         
-        pass
-        
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
 
@@ -26,4 +24,5 @@ class TLClassifier(object):
         
         label_to_id_map = {"Green": 2, "Yellow": 1, "Red": 0, "Off": 4}
         self.COLORID = label_to_id_map[self.predicted_label]
-        return TrafficLight.self.COLORID
+        
+        return self.COLORID
