@@ -6,7 +6,7 @@ class TLClassifier(object):
     def __init__(self):
 
         #Create an instance of traffic light neural network classifier
-        self.ldac = LightDetectionAndClassification()
+        self.ldac = LightDetectionAndClassification(detection_model=Detection_Model.SSD_INCEPTION)
         
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
