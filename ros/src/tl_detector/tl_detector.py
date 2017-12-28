@@ -83,6 +83,7 @@ class TLDetector(object):
             else:
                 self.upcoming_red_light_pub.publish(Int32(self.last_wp))
             self.state_count += 1
+            rate.sleep()
 
     def pose_cb(self, msg):
         self.pose = msg
@@ -199,7 +200,7 @@ class TLDetector(object):
         if light:
             # Use ground truth of the simulator to determine light state
             if self.publish_ground_truth:
-                return stop_line_wp_id, traffic_light.state
+                return light, traffic_light.state
             # Use classifier to determine light state
             elif stop_line_dist < VALID_DISTANCE_STOP_LINE:
                 state = self.get_light_state(light)
