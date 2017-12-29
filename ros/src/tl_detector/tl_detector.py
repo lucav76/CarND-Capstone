@@ -187,7 +187,7 @@ class TLDetector(object):
                 return -1, TrafficLight.UNKNOWN
             if self.enable_early_stop and stop_line_wp_id > EARLY_STOP_STEPS:
                 light = stop_line_wp_id - EARLY_STOP_STEPS
-            else: 
+            else:
                 light = stop_line_wp_id
 
             rospy.logdebug("TL_DETECTOR: Car   x: %.2f, y: %.2f",
@@ -207,7 +207,7 @@ class TLDetector(object):
             if self.publish_ground_truth:
                 return light, traffic_light.state
             # Use classifier to determine light state
-            elif stop_line_dist < VALID_DISTANCE_STOP_LINE:
+            elif traffic_light_dist < VALID_DISTANCE_STOP_LINE:
                 state = self.get_light_state(light)
                 rospy.loginfo("TL_DETECTOR: NNState: %i", state)
                 if state not in range(0,3):
