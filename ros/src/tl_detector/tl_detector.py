@@ -13,7 +13,7 @@ import yaml
 import math
 
 STATE_COUNT_THRESHOLD = 3
-VALID_DISTANCE_STOP_LINE = 200
+VALID_DISTANCE_STOP_LINE = 150
 
 class TLDetector(object):
     def __init__(self):
@@ -202,7 +202,7 @@ class TLDetector(object):
             if self.publish_ground_truth:
                 return light, traffic_light.state
             # Use classifier to determine light state
-            elif stop_line_dist < VALID_DISTANCE_STOP_LINE:
+            elif traffic_light_dist < VALID_DISTANCE_STOP_LINE:
                 state = self.get_light_state(light)
                 rospy.loginfo("TL_DETECTOR: NNState: %i", state)
                 if state not in range(0,3):
