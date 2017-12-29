@@ -153,10 +153,13 @@ class LightDetectionAndClassification:
         return classes
 
     def infer(self, image_wrap, annotate, desired_labels = None, resize = True, confidence_cutoff = 0.6):
-        start = self.current_milli_time()
+        RESIZE_WIDTH = 300
 
-        if resize:
-            image_wrap.resize_crop_or_pad_horizontal(300)
+        start = self.current_milli_time()
+        original_width, original_height = image_wrap.get_size()
+
+        if resize and original_width>RESIZE_WIDTH:
+            image_wrap.resize_crop_or_pad_horizontal(RESIZE_WIDTH)
             print("Resize to " + str(image_wrap.get_size()))
 
         boxes = self.det.infer(image_wrap, confidence_cutoff=confidence_cutoff)
@@ -177,6 +180,11 @@ class LightDetectionAndClassification:
         t2 = self.current_milli_time()
 
         print("Timing: ", (t1-start), (t2-t1))
+
+        if resize and original_width>RESIZE_WIDTH and box is not None:
+            factor = float(original_width) / RESIZE_WIDTH
+            x1, y1, x2, y2 = box
+            box = (int(x1*factor), int(y1*factor), int(x2*factor), int(y2*factor))
 
         return box, predictions, predicted_class, predicted_label , annotated_image if annotate else img, traffic_light
 
