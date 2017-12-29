@@ -20,7 +20,7 @@ class TLClassifier(object):
         """
            
         #Infer color of the traffic light using the classifier
-        self.box, self.predictions, self.predicted_class, self.predicted_label , self.annotated_img, self.traffic_light = self.ldac.infer(ImageWrap(image, opencv=True), annotate=False, desired_labels=["Red", "Green", "Yellow"], resize=True)
+        self.box, self.predictions, self.predicted_class, self.predicted_label , self.annotated_img, self.traffic_light = self.ldac.infer(ImageWrap(image, opencv=True), annotate=False, desired_labels=["Red", "Green", "Yellow"], resize=True, confidence_cutoff=0.6)
         label_to_id_map = {"Green": 2, "Yellow": 1, "Red": 0, "Off": 4}
         if self.predicted_label in label_to_id_map:
             return label_to_id_map[self.predicted_label]
