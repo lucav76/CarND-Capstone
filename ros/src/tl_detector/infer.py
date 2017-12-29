@@ -32,7 +32,7 @@ class Detection_Model(Enum):
 
 
 class LightDetectionAndClassification:
-    def __init__(self, load_frozen = True, detection_model = Detection_Model.SSD_INCEPTION):
+    def __init__(self, load_frozen = True, detection_model = Detection_Model.SSD_MOBILE_NET):
         print("Detection Frozen Graph File: " + detection_model.name + " - " + str(detection_model.value))
 
         self.det = LightDetection(detection_model.value)
