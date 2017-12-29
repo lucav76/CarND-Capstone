@@ -1,25 +1,16 @@
 import infer
+import utils
 
-ldac = infer.LightDetectionAndClassification(detection_model = infer.Detection_Model.RCNN_RESNET_101)
+print("GPU found: " + utils.get_gpu_name())
+ldac = infer.LightDetectionAndClassification(detection_model = infer.Detection_Model.SSD_MOBILE_NET)
 
 desired_labels=["Red", "Green", "Yellow"]
-print("\n\n\n")
-ldac.infer_and_save("traffic.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic2.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic3.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic4.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic5.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic6.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic7.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic8.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic9.jpg", desired_labels=desired_labels)
-print("\n\n\n")
-ldac.infer_and_save("traffic10.jpg", desired_labels=desired_labels)
+
+files = ["traffic.jpg", "traffic2.jpg", "traffic3.jpg", "traffic4.jpg", "traffic5.jpg",
+         "traffic6.jpg", "traffic7.jpg", "traffic8.jpg", "traffic9.jpg", "traffic10.jpg",
+         "left0000.jpg", "left0003.jpg", "left0011.jpg", "left0027.jpg", "left0140.jpg", "left0701.jpg"]
+
+for file in files:
+    print("\n\n\n")
+    ldac.infer_and_save(file, desired_labels=desired_labels, confidence_cutoff=0.6)
+

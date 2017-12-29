@@ -2,6 +2,7 @@ import os
 import random
 import numpy as np
 from os.path import isfile, join
+import tensorflow as tf
 
 def train_test_split(samples, test_size, shuffle_samples=True):
     if shuffle_samples:
@@ -96,3 +97,6 @@ def files_from(init_dir, include_sub_directories = False):
         files.extend(files_only(dir))
 
     return files
+
+def get_gpu_name():
+    return tf.test.gpu_device_name()

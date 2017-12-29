@@ -80,7 +80,7 @@ class LightDetection:
 
         self.sess = tf.Session(graph=self.detection_graph)
 
-    def infer(self, image_wrap):
+    def infer(self, image_wrap, confidence_cutoff = 0.7):
         #image = Image.open(image_file)
         #image_np = np.expand_dims(np.asarray(image, dtype=np.uint8), 0)
 
@@ -100,7 +100,6 @@ class LightDetection:
         scores = np.squeeze(scores)
         classes = np.squeeze(classes)
 
-        confidence_cutoff = 0.7
         # Filter boxes with a confidence score less than `confidence_cutoff`
         boxes, scores, classes = self.filter_boxes(confidence_cutoff, boxes, scores, classes)
 
@@ -135,6 +134,23 @@ class ImageWrap:
             width, height = self.image.size
 
         return width, height
+
+    def resize(self, percent_x, percent_y):
+        self.image = cv2.resize(self.image, None, fx=percent_x, fy=percent_x)
+
+    def resize_crop_or_pad_horizontal(self, new_width):
+        width, height = self.get_size()
+        new_height = int (height * (float(new_width) / width))
+
+        self.image = cv2.resize(self.image, (new_width, new_height))
+
+        if (new_width>new_height):
+            delta_h = new_width - new_height
+            bottom = delta_h
+            top, left, right = 0, 0, 0
+            color = [0, 0, 0]
+            self.image = cv2.copyMakeBorder(self.image, top, bottom, left, right, cv2.BORDER_CONSTANT,
+                                        value=color)
 
     def image_np(self, bgr):
         return np.expand_dims(self.get_image_bgr() if bgr else self.get_image_rgb(), 0)
