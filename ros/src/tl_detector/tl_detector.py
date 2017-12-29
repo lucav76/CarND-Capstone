@@ -31,7 +31,7 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
-        self.publish_ground_truth = False
+        self.publish_ground_truth = True
         self.has_image = False
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
@@ -183,7 +183,7 @@ class TLDetector(object):
             if stop_line_wp_id < 0:
                 rospy.logwarn("TL_DETECTOR: Invalid stop line idx %i", stop_line_wp_id)
                 return -1, TrafficLight.UNKNOWN
-            light = stop_line_wp_id
+            light = stop_line_wp_id-3
 
             rospy.logdebug("TL_DETECTOR: Car   x: %.2f, y: %.2f",
                            self.pose.pose.position.x,
