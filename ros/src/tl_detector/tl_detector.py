@@ -31,7 +31,7 @@ class TLDetector(object):
         self.last_state = TrafficLight.UNKNOWN
         self.last_wp = -1
         self.state_count = 0
-        self.publish_ground_truth = True
+        self.publish_ground_truth = False
         self.has_image = False
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
