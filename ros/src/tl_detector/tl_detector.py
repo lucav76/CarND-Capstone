@@ -13,7 +13,12 @@ import yaml
 import math
 
 STATE_COUNT_THRESHOLD = 3
+
 VALID_DISTANCE_STOP_LINE = 150
+EARLY_STOP_STEPS = 3
+
+
+
 
 class TLDetector(object):
     def __init__(self):
@@ -33,6 +38,7 @@ class TLDetector(object):
         self.state_count = 0
         self.publish_ground_truth = False
         self.has_image = False
+        self.enable_early_stop = True
 
         sub1 = rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         sub2 = rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
@@ -183,7 +189,10 @@ class TLDetector(object):
             if stop_line_wp_id < 0:
                 rospy.logwarn("TL_DETECTOR: Invalid stop line idx %i", stop_line_wp_id)
                 return -1, TrafficLight.UNKNOWN
-            light = stop_line_wp_id
+            if self.enable_early_stop and stop_line_wp_id > EARLY_STOP_STEPS:
+                light = stop_line_wp_id - EARLY_STOP_STEPS
+            else:
+                light = stop_line_wp_id
 
             rospy.logdebug("TL_DETECTOR: Car   x: %.2f, y: %.2f",
                            self.pose.pose.position.x,
