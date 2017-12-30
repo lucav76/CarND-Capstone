@@ -2,6 +2,7 @@
 
 import rospy
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import TwistStamped
 from styx_msgs.msg import Lane, Waypoint
 from std_msgs.msg import Int32
 
@@ -39,6 +40,7 @@ class WaypointUpdater(object):
         rospy.Subscriber('/current_pose', PoseStamped, self.pose_cb)
         rospy.Subscriber('/base_waypoints', Lane, self.waypoints_cb)
         rospy.Subscriber('/traffic_waypoint', Int32, self.traffic_cb)
+        rospy.Subscriber('/current_velocity', TwistStamped, self.current_velocity_cb, queue_size=1)
         self.final_waypoints_pub = rospy.Publisher('final_waypoints', Lane, queue_size=1)
 
         # Constants
@@ -48,6 +50,7 @@ class WaypointUpdater(object):
         self.change_tl_index = False # Will be set to true whenever tl_index changes
         self.std_velocity = self.kmph2mps(rospy.get_param('/waypoint_loader/velocity')) # Max speed parameter, in m/s
         self.max_waypoint_modified = 0 # The index of the furthest waypoint that has been modified, to speed up reseting base_waypoints after a light goes green
+        self.current_velocity = 0
 
         rate = rospy.Rate(10)
         while not rospy.is_shutdown():
@@ -80,8 +83,9 @@ class WaypointUpdater(object):
                         # Should be conservative
                         # Will not work if tl_index bounces around for a single traffic light
                         decel_rate = car_vel**2/(2*dist) # Deceleration required to stop by light, per equation vf^2 = vi^2 + 2ad, vf = 0
+                        current_decel_rate = self.current_velocity**2/(2*dist)
 
-                        if decel_rate < MAX_DECEL: # Drive right through the light if it's too close
+                        if current_decel_rate < MAX_DECEL: # Drive right through the light if it's too close
                             # Modify waypoint speeds to stop in time for waypoint
                             decel_rate = max(TARGET_DECEL, decel_rate) # Don't decelerate too slowly.  This will also make the car accelerate if initially stopped.
                             for i in range(closest_point, self.tl_index):
@@ -141,6 +145,9 @@ class WaypointUpdater(object):
     def obstacle_cb(self, msg):
         # TODO: Callback for /obstacle_waypoint message. We will implement it later
         pass
+
+    def current_velocity_cb(self, msg):
+        self.current_velocity = msg.twist.linear.x
 
     def get_waypoint_velocity(self, waypoint):
         return waypoint.twist.twist.linear.x
