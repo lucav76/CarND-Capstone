@@ -13,8 +13,12 @@ import yaml
 import math
 
 STATE_COUNT_THRESHOLD = 3
-VALID_DISTANCE_STOP_LINE = 200
+
+VALID_DISTANCE_STOP_LINE = 150
 EARLY_STOP_STEPS = 3
+
+
+
 
 class TLDetector(object):
     def __init__(self):
