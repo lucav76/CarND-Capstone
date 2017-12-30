@@ -26,10 +26,10 @@ TODO (for Yousuf and Aaron): Stopline location for each traffic light.
 '''
 
 LOOKAHEAD_WPS = 200 # Number of waypoints we will publish. You can change this number
-MAX_DECEL = 4. # Highest acceptable deceleration rate, in m/s^2
-TARGET_DECEL = 1. # Ideal deceleration rate, in m/s^2
-MAX_COMPLETE_STOP_DIST = 2. # If the traffic light is within this many meters, car can come to a complete stop
-EXTRA_STOP_WPS = 25
+MAX_DECEL = 10. # Highest acceptable deceleration rate, in m/s^2
+TARGET_DECEL = 1.5 # Ideal deceleration rate, in m/s^2
+MAX_COMPLETE_STOP_DIST = 7. # If the traffic light is within this many meters, car can come to a complete stop
+EXTRA_STOP_WPS = 50
 
 class WaypointUpdater(object):
     def __init__(self):
