@@ -13,9 +13,9 @@ class Controller(object):
                                             5,  # TODO
                                             kwargs['max_lat_accel'],
                                             kwargs['max_steer_angle'])
-        self.vel_pid = PID(kp=5,
-                           ki=0.5,
-                           kd=0.5,
+        self.vel_pid = PID(kp=10,
+                           ki=0.1,
+                           kd=5,
                            mn=kwargs['decel_limit'],
                            mx=kwargs['accel_limit'])
         self.decel_limit = kwargs['decel_limit']
