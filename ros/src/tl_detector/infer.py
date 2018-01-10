@@ -1,6 +1,7 @@
 import sys
 import tensorflow as tf
 import numpy as np
+import os
 from detection import LightDetection
 from detection import ImageWrap
 from detection import freeze_session
@@ -189,15 +190,15 @@ class LightDetectionAndClassification:
 
     def infer_and_save(self, image_file, desired_labels = None, resize = True, confidence_cutoff = 0.6):
         print(image_file)
-        image_wrap = ImageWrap(cv2.imread("assets\\" + image_file), True)
+        image_wrap = ImageWrap(cv2.imread("assets" + os.sep + image_file), True)
 
         biggest_box, predictions, prediction_class, prediction_label, annotated, img_box = self.infer(image_wrap, True, desired_labels=desired_labels, resize=resize, confidence_cutoff = confidence_cutoff)
 
         print("Predictions:" + str(predictions))
         print("Biggest box: " + str(biggest_box) + " - " + str(prediction_class) + " - " + str(prediction_label))
 
-        image_wrap.save("out_infer\\" + image_file)
-        cv2.imwrite("out_infer\\roi_" + image_file, img_box)
+        image_wrap.save("out_infer" + os.sep  + image_file)
+        cv2.imwrite("out_infer" + os.sep + "roi_" + image_file, img_box)
 
     def infer_and_save_dir(self, path, desired_labels = None, resize = True, confidence_cutoff = 0.6):
         files = utils.files_only(path)
@@ -217,15 +218,15 @@ class LightDetectionAndClassification:
             #print("Biggest box: " + str(biggest_box) + " - " + str(prediction_class) + " - " + str(prediction_label))
 
             file_name = file.replace(path, "")
-            file_name = file_name.replace("\\", "")
+            file_name = file_name.replace(os.sep , "")
 
             print(file_name)
-            dir = path + "\\" + prediction_label
+            dir = path + os.sep + prediction_label
             if not os.path.isdir(dir):
                 os.mkdir(dir)
-            #image_wrap.save(dir + "\\" + file_name)
-            cv2.imwrite(dir + "\\" + file_name, img_box)
-            #cv2.imwrite("out_infer\\roi_" + image_file, img_box)
+            #image_wrap.save(dir + os.sep  + file_name)
+            cv2.imwrite(dir + os.sep  + file_name, img_box)
+            #cv2.imwrite("out_infer" + os.sep + "roi_" + image_file, img_box)
 
 
 
