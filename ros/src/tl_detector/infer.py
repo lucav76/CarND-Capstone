@@ -22,20 +22,17 @@ print("TensorFlow:" + tf.__version__)
 K1.set_learning_phase(0)
 K2.set_learning_phase(0)
 
-from enum import Enum
-
-class Detection_Model(Enum):
-    SSD_MOBILE_NET = "ssd_mob_frozen_inference_graph.pb"
-    SSD_INCEPTION = "ssd_inc_frozen_inference_graph.pb"
-    RCNN_INCEPTION = "rcnn_inc_inference_graph.pb"
-    RCNN_RESNET_101 = "rcnn_res101_frozen_inference_graph.pb"
+SSD_MOBILE_NET = "ssd_mob_frozen_inference_graph.pb"
+SSD_INCEPTION = "ssd_inc_frozen_inference_graph.pb"
+RCNN_INCEPTION = "rcnn_inc_inference_graph.pb"
+RCNN_RESNET_101 = "rcnn_res101_frozen_inference_graph.pb"
 
 
 class LightDetectionAndClassification:
-    def __init__(self, load_frozen = True, detection_model = Detection_Model.SSD_MOBILE_NET):
-        print("Detection Frozen Graph File: " + detection_model.name + " - " + str(detection_model.value))
+    def __init__(self, load_frozen = True, detection_model = SSD_MOBILE_NET):
+        print("Detection Frozen Graph File:  - " + str(detection_model))
 
-        self.det = LightDetection(detection_model.value)
+        self.det = LightDetection(detection_model)
         self.det.load_graph()
         self.classifier_net = net.LightNet(None, False)
         #self.classifier_model = self.classifier_net.create_model()

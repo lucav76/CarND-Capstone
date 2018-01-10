@@ -2,7 +2,7 @@ import infer
 import utils
 
 print("GPU found: " + utils.get_gpu_name())
-ldac = infer.LightDetectionAndClassification(detection_model = infer.Detection_Model.SSD_MOBILE_NET)
+ldac = infer.LightDetectionAndClassification(detection_model = infer.SSD_MOBILE_NET)
 
 desired_labels=["Red", "Green", "Yellow"]
 
