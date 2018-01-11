@@ -213,9 +213,8 @@ class TLDetector(object):
             # Use classifier to determine light state
             elif traffic_light_dist < VALID_DISTANCE_STOP_LINE:
                 state = self.get_light_state(light)
-                rospy.loginfo("TL_DETECTOR: NNState: %i", state)
                 if state not in range(0,3):
-                    rospy.loginfo("TL_DETECTOR: Unknown State from classifier")
+                    rospy.logdebug("TL_DETECTOR: Unknown State %i from classifier", state)
                     return -1, TrafficLight.UNKNOWN
                 return light, state
 
