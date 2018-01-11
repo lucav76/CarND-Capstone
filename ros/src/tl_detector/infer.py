@@ -158,7 +158,7 @@ class LightDetectionAndClassification:
 
         if resize and original_width>RESIZE_WIDTH:
             image_wrap.resize_crop_or_pad_horizontal(RESIZE_WIDTH)
-            print("Resize to " + str(image_wrap.get_size()))
+            # print("Resize to " + str(image_wrap.get_size()))
 
         boxes = self.det.infer(image_wrap, confidence_cutoff=confidence_cutoff)
         t1 = self.current_milli_time()
