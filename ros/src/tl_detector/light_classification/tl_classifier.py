@@ -1,12 +1,12 @@
 from styx_msgs.msg import TrafficLight
-from infer import LightDetectionAndClassification, Detection_Model
+from infer import LightDetectionAndClassification, SSD_MOBILE_NET
 from detection import ImageWrap
 
 class TLClassifier(object):
     def __init__(self):
 
         #Create an instance of traffic light neural network classifier
-        self.ldac = LightDetectionAndClassification(detection_model=Detection_Model.SSD_MOBILE_NET)
+        self.ldac = LightDetectionAndClassification(detection_model=SSD_MOBILE_NET)
         
     def get_classification(self, image):
         """Determines the color of the traffic light in the image
