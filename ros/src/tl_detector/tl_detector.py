@@ -64,19 +64,19 @@ class TLDetector(object):
     def loop(self):
         rate = rospy.Rate(10) # 10Hz
         while not rospy.is_shutdown():
-            if not self.has_image:
+            if not self.has_image and not self.publish_ground_truth:
                 rospy.loginfo("TL_DETECTOR: No images received")
                 continue
             if not self.lights:
                 rospy.loginfo("TL_DETECTOR: No traffic lights received")
                 continue
 
-                '''
-                Publish upcoming red lights at desired frequency.
-                Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
-                of times till we start using it. Otherwise the previous stable state is
-                used.
-                '''
+            '''
+            Publish upcoming red lights at desired frequency.
+            Each predicted state has to occur `STATE_COUNT_THRESHOLD` number
+            of times till we start using it. Otherwise the previous stable state is
+            used.
+            '''
             light_wp, state = self.process_traffic_lights()
             if self.state != state:
                 self.state_count = 0
@@ -225,3 +225,4 @@ if __name__ == '__main__':
         TLDetector()
     except rospy.ROSInterruptException:
         rospy.logerr('Could not start traffic node.')
+
